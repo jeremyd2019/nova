@@ -196,14 +196,22 @@ class ImageMetaProps(base.NovaObject):
     # Version 1.36: Added 'hw_maxphysaddr_mode' and
     #                     'hw_maxphysaddr_bits' field
     # Version 1.37: Added 'hw_ephemeral_encryption_secret_uuid' field
+    # Version 1.38: Added 'ramfb' as an option to 'hw_video_model'
     # NOTE(efried): When bumping this version, the version of
     # ImageMetaPropsPayload must also be bumped. See its docstring for details.
-    VERSION = '1.37'
+    VERSION = '1.38'
 
     def obj_make_compatible(self, primitive, target_version):
         super(ImageMetaProps, self).obj_make_compatible(primitive,
                                                         target_version)
         target_version = versionutils.convert_version_to_tuple(target_version)
+        if target_version < (1, 38):
+            video = primitive.get('hw_video_model', None)
+            if video == fields.VideoModel.RAMFB:
+                raise exception.ObjectActionError(
+                    action='obj_make_compatible',
+                    reason='hw_video_model=%s not supported in version %s' %
+                           (video, target_version))
         if target_version < (1, 37):
             primitive.pop('hw_ephemeral_encryption_secret_uuid', None)
         if target_version < (1, 36):

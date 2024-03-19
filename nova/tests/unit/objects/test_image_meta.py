@@ -487,6 +487,28 @@ class TestImageMetaProps(test.NoDBTestCase):
                                obj.obj_to_primitive, '1.29')
         self.assertIn('hw_video_model=bochs not supported', str(ex))
 
+    def test_obj_ramfb_model_positive(self):
+        """Test "ramfb" support from Nova object version 1.38 onwards
+        """
+        obj = objects.ImageMetaProps(
+            hw_video_model=objects.fields.VideoModel.RAMFB,
+        )
+        primitive = obj.obj_to_primitive('1.38')
+        self.assertEqual(
+            objects.fields.VideoModel.RAMFB,
+            primitive['nova_object.data']['hw_video_model'])
+
+    def test_obj_ramfb_model_negative(self):
+        """Make sure an exception is raised for Nova object version <
+        1.38
+        """
+        obj = objects.ImageMetaProps(
+            hw_video_model=objects.fields.VideoModel.RAMFB,
+        )
+        ex = self.assertRaises(exception.ObjectActionError,
+                               obj.obj_to_primitive, '1.37')
+        self.assertIn('hw_video_model=ramfb not supported', str(ex))
+
     def test_obj_make_compatible_watchdog_action_not_disabled(self):
         """Tests that we don't pop the hw_watchdog_action if the value is not
         'disabled'.
